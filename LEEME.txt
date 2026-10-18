@@ -1,0 +1,186 @@
+﻿==========================================================================
+  PIXELANIM  ·  Generador de animaciones pixel-art con IA (versión portable)
+==========================================================================
+
+¿QUÉ ES?
+--------
+PixelAnim crea animaciones pequeñas de estilo retro pixelado y tramado (como los
+"sprites" de los juegos antiguos) usando inteligencia artificial que funciona EN TU
+PROPIO PC. No necesitas cuentas, ni pagar, ni subir nada a internet.
+
+Puedes partir de:
+  - Un texto:     "un murciélago volando", "un fantasma flotando"...
+  - Una imagen:   un dibujo, una foto, un logo... y la IA le da movimiento.
+  - Internet:     el programa busca fotos reales de lo que pidas y las anima.
+  - Un vídeo/GIF: lo convierte a ese estilo pixelado.
+
+Cada animación se guarda como:
+  - GIF                      (para enviar por WhatsApp, Discord, etc.)
+  - CSS                      (animación para páginas web, sin imágenes)
+  - Sprite sheet PNG         (para videojuegos: Godot, Unity, GameMaker...)
+  - Fondo de pantalla HTML   (para Lively Wallpaper o Wallpaper Engine)
+
+
+1. QUÉ NECESITAS
+----------------
+  - Windows 10 u 11 de 64 bits.
+  - Una tarjeta gráfica NVIDIA con 6 GB de memoria o más (muy recomendable).
+      Sin NVIDIA también funciona, pero cada animación tarda muchos minutos.
+      Para ver tu tarjeta: Ctrl+Mayús+Esc > Rendimiento > GPU.
+  - Unos 15 GB libres en el disco (20 GB si además instalas Ollama).
+  - Conexión a internet la primera vez (se descargan unos 6 GB en total).
+
+
+2. INSTALACIÓN (solo la primera vez)
+------------------------------------
+  1) Descomprime el zip en una carpeta cuya ruta NO tenga paréntesis.
+       Bien:  D:\PixelAnim       C:\Users\TuNombre\PixelAnim
+       Mal:   D:\Cosas (nuevas)\PixelAnim
+  2) Entra en la carpeta y haz doble clic en  INICIAR.bat
+       Si Windows muestra "Windows protegió su PC": pulsa "Más información"
+       y luego "Ejecutar de todas formas" (sale porque el archivo no está firmado).
+  3) Espera. Se abre una ventana negra que va haciendo esto solo:
+       [1/4] Descarga Python portable (dentro de la carpeta, no toca tu sistema)
+       [2/4] Instala pip
+       [3/4] Instala PyTorch (unos 3 GB; con NVIDIA instala la versión con CUDA)
+       [4/4] Instala el resto de librerías
+       Después hace una comprobación (salen líneas OK / AVISO) y abre PixelAnim
+       en el navegador. Tarda entre 10 y 20 minutos según tu internet.
+  4) NO cierres la ventana negra mientras usas PixelAnim: es el programa.
+     Para salir, ciérrala.
+
+  Las siguientes veces: doble clic en INICIAR.bat y se abre directamente.
+
+
+3. MODELOS DE IA QUE SE USAN
+----------------------------
+  A) IA de animación (OBLIGATORIA, se descarga SOLA, no tienes que hacer nada)
+     La primera vez que generes algo, PixelAnim descarga a la carpeta "modelos":
+       - AnimateDiff-Lightning (ByteDance)   ~0,9 GB  -> crea el movimiento
+       - DreamShaper 8 (Stable Diffusion 1.5) ~2 GB   -> dibuja los fotogramas
+       - CLIP + recortador de fondos (rembg)  ~0,8 GB -> solo para "buscar en internet"
+     Esa primera animación tarda más por la descarga. Luego ya no.
+
+  B) Ollama (OPCIONAL pero RECOMENDADO): hace que el chat te entienda bien
+     Sin Ollama, el chat solo entiende órdenes sencillas y conviene escribir el
+     tema en inglés ("a bat flying"). Con Ollama le hablas normal en español.
+
+     Cómo instalarlo:
+       1) Descarga e instala Ollama:  https://ollama.com/download/windows
+       2) Haz doble clic en  MODELOS_OLLAMA.bat  (incluido en esta carpeta) y elige:
+            1 = NORMAL (GPU de 8 GB o más)        ~9,4 GB
+                  qwen2.5:7b   -> chat (entiende español muy bien)
+                  llava:7b     -> visión (describe las imágenes que subes)
+            2 = LIGERO (GPU de 6 GB o menos)      ~3,7 GB
+                  llama3.2:3b  -> chat
+                  moondream    -> visión
+          El archivo busca Ollama solo, aunque tu consola no reconozca la orden
+          "ollama". Si se corta la descarga, vuelve a abrirlo y sigue donde iba.
+
+     Si ya tenías otros modelos en Ollama, PixelAnim elige solo uno adecuado
+     (de chat de 3 a 14B, p. ej. llama3.1:8b, gemma2, mistral; y de visión llava).
+     Evita los gigantes (70b, 32b), los de programar (coder) y deepseek-r1:
+     PixelAnim los ignora porque son lentos y quitan memoria a la IA de animación.
+
+     Para obligar a usar un modelo concreto, abre una consola en esta carpeta y:
+         set PIXELANIM_LLM=llama3.1:8b
+         set PIXELANIM_VISION=llava:7b
+         INICIAR.bat
+
+     No hace falta abrir Ollama a mano: PixelAnim lo arranca solo si está instalado.
+
+
+4. CÓMO SE USA
+--------------
+  Arriba verás si detectó tu GPU y Ollama. Hay 4 pestañas:
+
+  CHAT (la más fácil)
+     Escribe lo que quieres y pulsa Enter. Ejemplos:
+       "un cuervo volando en rojo"
+       "busca en internet un zorro corriendo"      (anima fotos reales; da 3 variantes)
+       (clip) adjunta una imagen sin escribir nada -> la anima
+     Luego pide cambios hablando:
+       "en verde" / "en ámbar" / "estilo gameboy"   -> cambia los colores
+       "más grande" / "64" / "más retro"            -> cambia la resolución
+       "más rápido" / "más lento"                   -> velocidad
+       "más grano" / "menos motas" / "más grueso"   -> textura
+       "otra versión"                               -> genera otra distinta
+       "estilo tinta" / "estilo sombra"             -> otro dibujo
+       "que flote" / "que respire" / "que se balancee" / "aleteo" (con imagen)
+       "sin ia"                                     -> solo mueve tu imagen, en 1 s
+     Los cambios de color, tamaño o velocidad son instantáneos (no regenera).
+
+  TEXTO
+     Escribe el tema, elige estilo y pulsa Generar.
+     Marca "Nutrir con imágenes de internet" para partir de fotos reales.
+
+  IMAGEN
+     Sube una imagen, elige movimiento y "Fuerza IA":
+       0      = no usa IA, solo mueve tu imagen (instantáneo)
+       0.4-0.5= respeta tu dibujo
+       0.7-0.8= la IA lo reinterpreta más
+     Funciona mejor con un dibujo o foto de un solo objeto sobre fondo liso.
+
+  VÍDEO / GIF
+     Sube un vídeo corto o GIF y lo convierte al estilo pixelado.
+
+  PANEL "PIXELADO" (desplegable)
+     Resolución, paleta de colores (gris, fósforo, ámbar, papel, sangre, hielo,
+     gameboy), tonos, grano, motas, contraste... Pulsa "Reajustar sin regenerar".
+
+  Si salen varias VARIANTES, haz clic en la que más te guste.
+
+
+5. DÓNDE ESTÁN TUS ANIMACIONES
+------------------------------
+  En la carpeta  salidas\<nombre>\  :
+     <nombre>.gif              -> la animación
+     <nombre>.css              -> para webs (pega el CSS y un <div class="nombre">)
+     <nombre>_css.html         -> demo del CSS (ábrela con el navegador)
+     <nombre>_sheet.png        -> sprite sheet para videojuegos
+     <nombre>_wallpaper.html   -> fondo de pantalla (Lively Wallpaper: Añadir >
+                                  elige este archivo)
+     ia\                       -> fotogramas originales de la IA
+  También puedes descargarlos desde "Archivos" en la propia página.
+
+
+6. TIEMPOS ORIENTATIVOS
+-----------------------
+  Con GPU NVIDIA:  10-40 segundos por animación (más la 1ª vez por las descargas).
+  "Buscar en internet": +30-60 s de búsqueda, y anima 3 variantes.
+  Sin GPU:         5-15 minutos por animación.
+
+
+7. SI ALGO FALLA
+----------------
+  - "Windows protegió su PC": Más información > Ejecutar de todas formas.
+  - Error al descargar/instalar: revisa internet y vuelve a abrir INICIAR.bat
+    (continúa donde se quedó).
+  - Se instaló pero algo no va: doble clic en REPARAR.bat y luego INICIAR.bat.
+  - "Sin memoria en la GPU": cierra juegos y programas pesados. Si sigue, abre una
+    consola en la carpeta y escribe:   set PIXELANIM_SIZE=384   y luego   INICIAR.bat
+    (algo menos de calidad, mucha menos memoria).
+  - El chat no entiende bien: instala Ollama y los modelos (apartado 3B).
+  - El dibujo sale raro o con fondo: pide "otra versión", prueba otro estilo, o
+    usa "busca en internet ..." para partir de fotos reales.
+  - La primera animación tarda mucho: está descargando ~3 GB de modelos; es normal.
+  - No se abre el navegador: abre tú  http://127.0.0.1:7860
+  - Para desinstalar: borra la carpeta entera. No deja nada fuera de ella
+    (salvo Ollama, si lo instalaste aparte).
+
+
+8. ARCHIVOS DE ESTA CARPETA
+---------------------------
+  INICIAR.bat          -> instala (1ª vez) y abre PixelAnim
+  MODELOS_OLLAMA.bat   -> descarga los modelos de Ollama (opcional)
+  GENERAR.bat          -> uso por consola:  GENERAR.bat "un búho volando" --web
+  REPARAR.bat          -> fuerza a revisar la instalación
+  README.md            -> documentación técnica completa
+  *.py                 -> el programa
+  salidas\             -> ejemplos y tus animaciones
+  (se crean solos) python\  modelos\
+
+
+Nota: las fotos que encuentra "buscar en internet" son de terceros. Úsalas para
+uso personal; si vas a publicar algo, revisa las licencias en
+salidas\web-...\referencias\referencias.json

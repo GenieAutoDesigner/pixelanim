@@ -1,0 +1,8 @@
+# Se crean al instalar/usar (versión portable)
+python/
+modelos/
+.venv/
+salidas/
+.instalado
+__pycache__/
+*.pyc

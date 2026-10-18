@@ -1,0 +1,13 @@
+diffusers>=0.30
+transformers>=4.40
+accelerate
+safetensors
+huggingface_hub
+pillow
+numpy
+imageio
+imageio-ffmpeg
+gradio>=5.0
+ddgs
+rembg
+onnxruntime
