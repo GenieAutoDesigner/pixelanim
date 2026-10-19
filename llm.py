@@ -18,6 +18,22 @@ def _post(path: str, body: dict, timeout: float = 120):
 
 
 _start_tried = False
+_proc = None   # Ollama arrancado por PixelAnim (se cierra al salir; si ya estaba abierto no se toca)
+
+
+def stop_started():
+    """Cierra el Ollama que haya arrancado PixelAnim (no el que el usuario ya tuviera abierto)."""
+    global _proc
+    p, _proc = _proc, None
+    if p is not None and p.poll() is None:
+        try:
+            p.terminate()
+            p.wait(timeout=5)
+        except Exception:
+            try:
+                p.kill()
+            except Exception:
+                pass
 
 
 def _find_exe():
@@ -38,9 +54,10 @@ def _try_start():
         return False
     import subprocess
     import time
+    global _proc
     try:
-        subprocess.Popen([exe, "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        _proc = subprocess.Popen([exe, "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except Exception:
         return False
     for _ in range(20):

@@ -41,12 +41,79 @@ def _friendly(e: Exception) -> str:
     return msg[:400]
 
 
+# ------------------------------------------------------------------ cierre automático
+# Al cerrar la pestaña del navegador se apaga el servidor (libera el puerto) y el Ollama que hayamos arrancado.
+# Nunca se apaga en mitad de una generación.
+
+import threading  # noqa: E402
+
+IDLE_AFTER_CLOSE = 8      # s sin pestañas abiertas -> salir
+IDLE_NO_BEAT = 180        # s sin latidos (navegador cerrado de golpe / pestaña congelada) -> salir
+_life = {"sessions": set(), "seen": False, "beat": time.time(), "empty_since": None, "busy": 0}
+_life_lock = threading.Lock()
+
+
+class _Busy:
+    def __enter__(self):
+        with _life_lock:
+            _life["busy"] += 1
+
+    def __exit__(self, *exc):
+        with _life_lock:
+            _life["busy"] -= 1
+            _life["beat"] = time.time()
+
+
+def _hello(request: gr.Request = None):
+    with _life_lock:
+        _life["seen"] = True
+        _life["beat"] = time.time()
+        _life["empty_since"] = None
+        sid = getattr(request, "session_hash", None)
+        if sid:
+            _life["sessions"].add(sid)
+
+
+def _bye(request: gr.Request = None):
+    with _life_lock:
+        sid = getattr(request, "session_hash", None)
+        _life["sessions"].discard(sid)
+        if not _life["sessions"]:
+            _life["empty_since"] = time.time()
+
+
+def _shutdown(reason):
+    print(f"\nPixelAnim se cierra ({reason}). Puerto liberado.", flush=True)
+    try:
+        llm.stop_started()
+    except Exception:
+        pass
+    os._exit(0)
+
+
+def _watchdog():
+    while True:
+        time.sleep(2)
+        with _life_lock:
+            if not _life["seen"] or _life["busy"]:
+                continue
+            now = time.time()
+            if _life["empty_since"] and now - _life["empty_since"] > IDLE_AFTER_CLOSE:
+                reason = "pestaña cerrada"
+            elif now - _life["beat"] > IDLE_NO_BEAT:
+                reason = "sin navegador"
+            else:
+                continue
+        _shutdown(reason)
+
+
 def safe(fn):
     """Cualquier excepción se muestra en la interfaz en vez de colgarla."""
     @functools.wraps(fn)
     def wrap(*a, **k):
         try:
-            return fn(*a, **k)
+            with _Busy():
+                return fn(*a, **k)
         except gr.Error:
             raise
         except Exception as e:  # noqa: BLE001
@@ -171,7 +238,8 @@ def _msg_parts(msg):
 def do_chat(msg, history, progress=gr.Progress()):
     history = list(history or [])
     try:
-        return _do_chat(msg, history, progress)
+        with _Busy():
+            return _do_chat(msg, history, progress)
     except Exception as e:  # noqa: BLE001
         traceback.print_exc()
         history.append({"role": "assistant", "content": "⚠ " + _friendly(e)})
@@ -317,11 +385,20 @@ def build():
         bvid.click(do_video, [archivo, *pix], outs)
         bre.click(do_retune, pix, outs)
         variantes.select(do_pick, pix, [gif, files, info])
+        # vida de la sesión: al cerrar la pestaña se apaga el servidor
+        demo.load(_hello, None, None, queue=False, show_progress="hidden")
+        if hasattr(demo, "unload"):
+            demo.unload(_bye)
+        if hasattr(gr, "Timer"):
+            gr.Timer(5).tick(_hello, None, None, queue=False, show_progress="hidden")
     return demo
 
 
-def launch(inbrowser=True, port=None):
+def launch(inbrowser=True, port=None, auto_close=True):
     demo = build()
+    if auto_close and os.environ.get("PIXELANIM_NO_AUTOCLOSE") != "1":
+        threading.Thread(target=_watchdog, daemon=True).start()
+        print("Al cerrar la pestaña del navegador, PixelAnim se cierra solo y libera el puerto.", flush=True)
     kw = {"inbrowser": inbrowser}
     if port:
         kw["server_port"] = port
